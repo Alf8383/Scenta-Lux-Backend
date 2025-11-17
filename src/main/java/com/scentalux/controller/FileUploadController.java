@@ -18,127 +18,133 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class FileUploadController {
 
-    @Value("${file.upload-dir:uploads}")
+    // =========================
+    // Constants
+    // =========================
+    private static final String DEFAULT_UPLOAD_DIR = "uploads";
+    private static final String ERROR_KEY = "error";
+    private static final String MESSAGE_KEY = "message";
+
+    private static final String ERROR_IMAGE_ONLY = "Solo se permiten archivos de imagen";
+    private static final String ERROR_IMAGE_PDF_ONLY = "Solo se permiten archivos de imagen (JPG, PNG, etc.) o PDF";
+    private static final String ERROR_FILE_TOO_LARGE = "El archivo no puede ser mayor a 5MB";
+    private static final String ERROR_UPLOAD_FAILED = "Error al subir la imagen";
+    private static final String ERROR_RECEIPT_FAILED = "Error al subir el comprobante: ";
+    private static final String ERROR_FILE_REQUIRED = "Nombre de archivo requerido";
+    private static final String ERROR_FILE_NOT_FOUND = "Archivo no encontrado";
+    private static final String ERROR_FILE_DELETE = "Error al eliminar el archivo: ";
+
+    private static final String URL_PREFIX = "/uploads/";
+    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+
+    // =========================
+    // Configuration
+    // =========================
+    @Value("${file.upload-dir:" + DEFAULT_UPLOAD_DIR + "}")
     private String uploadDir;
 
+    // =========================
+    // Upload image
+    // =========================
     @PostMapping("/image")
     public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
         try {
-            // Crear directorio si no existe
-            Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
+            Path uploadPath = getUploadPath();
 
-            // Validar tipo de archivo
+            // Validate file type
             String contentType = file.getContentType();
             if (contentType == null || !contentType.startsWith("image/")) {
-                Map<String, String> errorResponse = new HashMap<>();
-                errorResponse.put("error", "Solo se permiten archivos de imagen");
-                return ResponseEntity.badRequest().body(errorResponse);
+                return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, ERROR_IMAGE_ONLY));
             }
 
-            // Generar nombre único
-            String originalFileName = file.getOriginalFilename();
-            String fileExtension = "";
-            if (originalFileName != null && originalFileName.contains(".")) {
-                fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
-            }
-            String fileName = UUID.randomUUID().toString() + fileExtension;
+            // Save file
+            String fileName = generateFileName(file);
+            Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
 
-            // Guardar archivo
-            Path filePath = uploadPath.resolve(fileName);
-            Files.copy(file.getInputStream(), filePath);
-
-            // URL para acceder a la imagen
-            String fileUrl = "/uploads/" + fileName;
-
-            Map<String, String> successResponse = new HashMap<>();
-            successResponse.put("url", fileUrl);
-
-            return ResponseEntity.ok(successResponse);
+            // Return URL
+            return ResponseEntity.ok(Map.of("url", URL_PREFIX + fileName));
 
         } catch (IOException e) {
-            Map<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Error al subir la imagen");
-            return ResponseEntity.internalServerError().body(errorResponse);
+            return ResponseEntity.internalServerError().body(Map.of(ERROR_KEY, ERROR_UPLOAD_FAILED));
         }
     }
-    // 🔥 NUEVO MÉTODO PARA SUBIR COMPROBANTES DE PAGO
+
+    // =========================
+    // Upload receipt (image or PDF)
+    // =========================
     @PostMapping("/receipt")
     public ResponseEntity<?> uploadReceipt(@RequestParam("file") MultipartFile file) {
         try {
-            // Crear directorio si no existe
-            Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
+            Path uploadPath = getUploadPath();
 
-            // Validar tipo de archivo (imágenes y PDFs)
+            // Validate type
             String contentType = file.getContentType();
-            if (contentType == null || 
-                (!contentType.startsWith("image/") && !contentType.equals("application/pdf"))) {
-                Map<String, String> errorResponse = new HashMap<>();
-                errorResponse.put("error", "Solo se permiten archivos de imagen (JPG, PNG, etc.) o PDF");
-                return ResponseEntity.badRequest().body(errorResponse);
+            if (contentType == null || (!contentType.startsWith("image/") && !contentType.equals("application/pdf"))) {
+                return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, ERROR_IMAGE_PDF_ONLY));
             }
 
-            // Validar tamaño del archivo (máximo 5MB)
-            if (file.getSize() > 5 * 1024 * 1024) {
-                Map<String, String> errorResponse = new HashMap<>();
-                errorResponse.put("error", "El archivo no puede ser mayor a 5MB");
-                return ResponseEntity.badRequest().body(errorResponse);
+            // Validate size
+            if (file.getSize() > MAX_FILE_SIZE) {
+                return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, ERROR_FILE_TOO_LARGE));
             }
 
-            // Generar nombre único para comprobante
-            String originalFileName = file.getOriginalFilename();
-            String fileExtension = "";
-            if (originalFileName != null && originalFileName.contains(".")) {
-                fileExtension = originalFileName.substring(originalFileName.lastIndexOf("."));
-            }
-            String fileName = "receipt_" + UUID.randomUUID().toString() + fileExtension;
+            // Save file
+            String fileName = "receipt_" + generateFileName(file);
+            Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
 
-            // Guardar archivo
-            Path filePath = uploadPath.resolve(fileName);
-            Files.copy(file.getInputStream(), filePath);
+            Map<String, String> response = new HashMap<>();
+            response.put("url", URL_PREFIX + fileName);
+            response.put("fileName", fileName);
+            response.put("fileType", contentType);
+            response.put("size", String.valueOf(file.getSize()));
 
-            // URL para acceder al archivo
-            String fileUrl = "/uploads/" + fileName;
-
-            Map<String, String> successResponse = new HashMap<>();
-            successResponse.put("url", fileUrl);
-            successResponse.put("fileName", fileName);
-            successResponse.put("fileType", contentType);
-            successResponse.put("size", String.valueOf(file.getSize()));
-
-            return ResponseEntity.ok(successResponse);
+            return ResponseEntity.ok(response);
 
         } catch (IOException e) {
-            Map<String, String> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Error al subir el comprobante: " + e.getMessage());
-            return ResponseEntity.internalServerError().body(errorResponse);
+            return ResponseEntity.internalServerError().body(Map.of(ERROR_KEY, ERROR_RECEIPT_FAILED + e.getMessage()));
         }
     }
 
-    // Método opcional para eliminar archivos (si lo necesitas)
+    // =========================
+    // Delete file
+    // =========================
     @DeleteMapping("/file")
     public ResponseEntity<?> deleteFile(@RequestBody Map<String, String> request) {
         try {
             String fileName = request.get("fileName");
             if (fileName == null || fileName.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Nombre de archivo requerido"));
+                return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, ERROR_FILE_REQUIRED));
             }
 
             Path filePath = Paths.get(uploadDir).resolve(fileName);
             if (Files.exists(filePath)) {
                 Files.delete(filePath);
-                return ResponseEntity.ok(Map.of("message", "Archivo eliminado correctamente"));
+                return ResponseEntity.ok(Map.of(MESSAGE_KEY, "Archivo eliminado correctamente"));
             } else {
-                return ResponseEntity.status(404).body(Map.of("error", "Archivo no encontrado"));
+                return ResponseEntity.status(404).body(Map.of(ERROR_KEY, ERROR_FILE_NOT_FOUND));
             }
         } catch (IOException e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.of("error", "Error al eliminar el archivo: " + e.getMessage()));
+            return ResponseEntity.internalServerError().body(Map.of(ERROR_KEY, ERROR_FILE_DELETE + e.getMessage()));
         }
+    }
+
+    // =========================
+    // Helper methods
+    // =========================
+    private Path getUploadPath() throws IOException {
+        Path uploadPath = Paths.get(uploadDir);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+        return uploadPath;
+    }
+
+    private String generateFileName(MultipartFile file) {
+        String originalFileName = file.getOriginalFilename();
+        String extension = "";
+        if (originalFileName != null && originalFileName.contains(".")) {
+            extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+        }
+        return UUID.randomUUID().toString() + extension;
     }
 }
