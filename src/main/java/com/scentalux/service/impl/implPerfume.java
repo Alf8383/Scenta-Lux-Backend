@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class implPerfume extends implGenericService<Perfume, Integer> implements PerfumeService {
+public class implPerfume extends ImplGenericService<Perfume, Integer> implements PerfumeService {
 
     private final PerfumeRepository repo;
 

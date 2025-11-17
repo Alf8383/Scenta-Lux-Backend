@@ -5,7 +5,7 @@ import com.scentalux.repo.IGenericRepo;
 import com.scentalux.service.GenericService;
 import java.util.List;
 
-public abstract class implGenericService<T, I> implements GenericService<T, I> {
+public abstract class ImplGenericService<T, I> implements GenericService<T, I> {
 
     protected abstract IGenericRepo<T, I> getRepo();
 
@@ -18,7 +18,8 @@ public abstract class implGenericService<T, I> implements GenericService<T, I> {
 
     @Override
     public T update(T t, I id) {
-        getRepo().findById(id).orElseThrow(() -> new ModelNotFoundException(ID_NOT_FOUND_MSG + id));
+        getRepo().findById(id)
+            .orElseThrow(() -> new ModelNotFoundException(ID_NOT_FOUND_MSG + id));
         return getRepo().save(t);
     }
 
@@ -29,12 +30,14 @@ public abstract class implGenericService<T, I> implements GenericService<T, I> {
 
     @Override
     public T findById(I id) {
-        return getRepo().findById(id).orElseThrow(() -> new ModelNotFoundException(ID_NOT_FOUND_MSG + id));
+        return getRepo().findById(id)
+            .orElseThrow(() -> new ModelNotFoundException(ID_NOT_FOUND_MSG + id));
     }
 
     @Override
     public void delete(I id) {
-        getRepo().findById(id).orElseThrow(() -> new ModelNotFoundException(ID_NOT_FOUND_MSG + id));
+        getRepo().findById(id)
+            .orElseThrow(() -> new ModelNotFoundException(ID_NOT_FOUND_MSG + id));
         getRepo().deleteById(id);
     }
 }

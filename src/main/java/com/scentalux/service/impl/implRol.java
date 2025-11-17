@@ -12,7 +12,7 @@ import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
-public class implRol extends implGenericService<Role, Integer> implements RolService {
+public class implRol extends ImplGenericService<Role, Integer> implements RolService {
     private final RolRepository repo;
 
     @Override

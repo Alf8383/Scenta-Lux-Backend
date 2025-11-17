@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class OrderItemServiceImpl extends implGenericService<OrderItem, Integer> implements OrderItemService {
+public class OrderItemServiceImpl extends ImplGenericService<OrderItem, Integer> implements OrderItemService {
 
     private final IOrderItemRepo repo;
 

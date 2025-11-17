@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class OrderServiceImpl extends implGenericService<Order, Integer> implements OrderService {
+public class OrderServiceImpl extends ImplGenericService<Order, Integer> implements OrderService {
 
     private final IOrderRepo orderRepo;
     private final IUserRepo userRepo;
