@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class JwtTokenUtil implements Serializable {
     
 
-    private final long JWT_TOKEN_VALIDITY = 5 * 60 * 60 * 1000; 
+    private static final long JWT_TOKEN_VALIDITY = 5L * 60 * 60 * 1000; 
 
     @Value("${jwt.secret}") 
     private String secret;
