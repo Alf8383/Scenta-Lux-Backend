@@ -1,10 +1,16 @@
 package com.scentalux.service;
+
 import java.util.List;
 
-public interface GenericService <T,ID>  {
-    T save(T t) throws Exception;
-    T update(T t, ID id) throws Exception;
-    List<T> findAll() throws Exception;
-    T findById(ID id) throws Exception;
-    void delete(ID id) throws Exception;
+public interface GenericService<T, I> {
+
+    T save(T t);
+
+    T update(T t, I id);
+
+    List<T> findAll();
+
+    T findById(I id);
+
+    void delete(I id);
 }
