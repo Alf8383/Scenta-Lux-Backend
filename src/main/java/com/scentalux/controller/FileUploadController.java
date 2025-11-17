@@ -109,31 +109,44 @@ public class FileUploadController {
     // Delete file
     // =========================
     @DeleteMapping("/file")
-    public ResponseEntity<Map<String, Object>> deleteFile(@RequestBody Map<String, String> request) {
-        try {
-            String fileName = request.get("fileName");
-            if (fileName == null || fileName.isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.<String, Object>of(ERROR_KEY, ERROR_FILE_REQUIRED));
-            }
+public ResponseEntity<Map<String, Object>> deleteFile(@RequestBody Map<String, String> request) {
+    try {
+        String fileName = request.get("fileName");
 
-            Path filePath = Paths.get(uploadDir).resolve(fileName);
-
-            if (Files.exists(filePath)) {
-                Files.delete(filePath);
-                return ResponseEntity.ok(
-                        Map.<String, Object>of(MESSAGE_KEY, "Archivo eliminado correctamente")
-                );
-            } else {
-                return ResponseEntity.status(404)
-                        .body(Map.<String, Object>of(ERROR_KEY, ERROR_FILE_NOT_FOUND));
-            }
-
-        } catch (IOException e) {
-            return ResponseEntity.internalServerError()
-                    .body(Map.<String, Object>of(ERROR_KEY, ERROR_FILE_DELETE + e.getMessage()));
+        if (fileName == null || fileName.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.<String, Object>of(ERROR_KEY, ERROR_FILE_REQUIRED));
         }
+
+        // 🚨 SECURITY: Prevent path traversal
+        if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
+            return ResponseEntity.badRequest()
+                    .body(Map.<String, Object>of(ERROR_KEY, "Nombre de archivo inválido"));
+        }
+
+        Path uploadPath = Paths.get(uploadDir).normalize().toAbsolutePath();
+        Path filePath = uploadPath.resolve(fileName).normalize().toAbsolutePath();
+
+        // 🚨 SECURITY: Ensure file is inside upload directory
+        if (!filePath.startsWith(uploadPath)) {
+            return ResponseEntity.badRequest()
+                    .body(Map.<String, Object>of(ERROR_KEY, "Ruta de archivo no permitida"));
+        }
+
+        if (Files.exists(filePath)) {
+            Files.delete(filePath);
+            return ResponseEntity.ok(
+                    Map.<String, Object>of(MESSAGE_KEY, "Archivo eliminado correctamente"));
+        } else {
+            return ResponseEntity.status(404)
+                    .body(Map.<String, Object>of(ERROR_KEY, ERROR_FILE_NOT_FOUND));
+        }
+
+    } catch (IOException e) {
+        return ResponseEntity.internalServerError()
+                .body(Map.<String, Object>of(ERROR_KEY, ERROR_FILE_DELETE + e.getMessage()));
     }
+}
 
     // =========================
     // Helper methods
