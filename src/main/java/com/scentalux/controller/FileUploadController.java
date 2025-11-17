@@ -35,7 +35,7 @@ public class FileUploadController {
     private static final String ERROR_FILE_DELETE = "Error al eliminar el archivo: ";
 
     private static final String URL_PREFIX = "/uploads/";
-    private static final long MAX_FILE_SIZE = 5L * 1024 * 1024; // 5MB
+    private static final long MAX_FILE_SIZE = 5L * 1024 * 1024;
 
     // =========================
     // Configuration
@@ -51,21 +51,19 @@ public class FileUploadController {
         try {
             Path uploadPath = getUploadPath();
 
-            // Validate file type
             String contentType = file.getContentType();
             if (contentType == null || !contentType.startsWith("image/")) {
-                return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, ERROR_IMAGE_ONLY));
+                return ResponseEntity.badRequest().body(Map.<String, Object>of(ERROR_KEY, ERROR_IMAGE_ONLY));
             }
 
-            // Save file
             String fileName = generateFileName(file);
             Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
 
-            // Return URL
-            return ResponseEntity.ok(Map.of("url", URL_PREFIX + fileName));
+            return ResponseEntity.ok(Map.<String, Object>of("url", URL_PREFIX + fileName));
 
         } catch (IOException e) {
-            return ResponseEntity.internalServerError().body(Map.of(ERROR_KEY, ERROR_UPLOAD_FAILED));
+            return ResponseEntity.internalServerError()
+                    .body(Map.<String, Object>of(ERROR_KEY, ERROR_UPLOAD_FAILED));
         }
     }
 
@@ -73,36 +71,37 @@ public class FileUploadController {
     // Upload receipt (image or PDF)
     // =========================
     @PostMapping("/receipt")
-    public ResponseEntity<Map<String, Object>> uploadReceipt(@RequestParam("file") MultipartFile file)
- {
+    public ResponseEntity<Map<String, Object>> uploadReceipt(@RequestParam("file") MultipartFile file) {
         try {
             Path uploadPath = getUploadPath();
 
-            // Validate type
             String contentType = file.getContentType();
-            if (contentType == null || (!contentType.startsWith("image/") && !contentType.equals("application/pdf"))) {
-                return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, ERROR_IMAGE_PDF_ONLY));
+            if (contentType == null ||
+                (!contentType.startsWith("image/") && !contentType.equals("application/pdf"))) {
+
+                return ResponseEntity.badRequest()
+                        .body(Map.<String, Object>of(ERROR_KEY, ERROR_IMAGE_PDF_ONLY));
             }
 
-            // Validate size
             if (file.getSize() > MAX_FILE_SIZE) {
-                return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, ERROR_FILE_TOO_LARGE));
+                return ResponseEntity.badRequest()
+                        .body(Map.<String, Object>of(ERROR_KEY, ERROR_FILE_TOO_LARGE));
             }
 
-            // Save file
             String fileName = "receipt_" + generateFileName(file);
             Files.copy(file.getInputStream(), uploadPath.resolve(fileName));
 
-            Map<String, String> response = new HashMap<>();
+            Map<String, Object> response = new HashMap<>();
             response.put("url", URL_PREFIX + fileName);
             response.put("fileName", fileName);
             response.put("fileType", contentType);
-            response.put("size", String.valueOf(file.getSize()));
+            response.put("size", file.getSize());
 
-            return ResponseEntity.ok(Map.<String, Object>of(MESSAGE_KEY, "Archivo eliminado correctamente"));
+            return ResponseEntity.ok(response);
 
         } catch (IOException e) {
-            return ResponseEntity.internalServerError().body(Map.of(ERROR_KEY, ERROR_RECEIPT_FAILED + e.getMessage()));
+            return ResponseEntity.internalServerError()
+                    .body(Map.<String, Object>of(ERROR_KEY, ERROR_RECEIPT_FAILED + e.getMessage()));
         }
     }
 
@@ -110,23 +109,29 @@ public class FileUploadController {
     // Delete file
     // =========================
     @DeleteMapping("/file")
-    public ResponseEntity<Map<String, Object>> deleteFile(@RequestBody Map<String, String> request)
- {
+    public ResponseEntity<Map<String, Object>> deleteFile(@RequestBody Map<String, String> request) {
         try {
             String fileName = request.get("fileName");
             if (fileName == null || fileName.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, ERROR_FILE_REQUIRED));
+                return ResponseEntity.badRequest()
+                        .body(Map.<String, Object>of(ERROR_KEY, ERROR_FILE_REQUIRED));
             }
 
             Path filePath = Paths.get(uploadDir).resolve(fileName);
+
             if (Files.exists(filePath)) {
                 Files.delete(filePath);
-                return ResponseEntity.ok(Map.of(MESSAGE_KEY, "Archivo eliminado correctamente"));
+                return ResponseEntity.ok(
+                        Map.<String, Object>of(MESSAGE_KEY, "Archivo eliminado correctamente")
+                );
             } else {
-                return ResponseEntity.status(404).body(Map.of(ERROR_KEY, ERROR_FILE_NOT_FOUND));
+                return ResponseEntity.status(404)
+                        .body(Map.<String, Object>of(ERROR_KEY, ERROR_FILE_NOT_FOUND));
             }
+
         } catch (IOException e) {
-            return ResponseEntity.internalServerError().body(Map.of(ERROR_KEY, ERROR_FILE_DELETE + e.getMessage()));
+            return ResponseEntity.internalServerError()
+                    .body(Map.<String, Object>of(ERROR_KEY, ERROR_FILE_DELETE + e.getMessage()));
         }
     }
 
@@ -144,9 +149,11 @@ public class FileUploadController {
     private String generateFileName(MultipartFile file) {
         String originalFileName = file.getOriginalFilename();
         String extension = "";
+
         if (originalFileName != null && originalFileName.contains(".")) {
             extension = originalFileName.substring(originalFileName.lastIndexOf("."));
         }
+
         return UUID.randomUUID().toString() + extension;
     }
 }
