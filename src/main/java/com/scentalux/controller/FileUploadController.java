@@ -47,7 +47,7 @@ public class FileUploadController {
     // Upload image
     // =========================
     @PostMapping("/image")
-    public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Map<String, Object>> uploadImage(@RequestParam("file") MultipartFile file) {
         try {
             Path uploadPath = getUploadPath();
 
@@ -73,7 +73,8 @@ public class FileUploadController {
     // Upload receipt (image or PDF)
     // =========================
     @PostMapping("/receipt")
-    public ResponseEntity<?> uploadReceipt(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<Map<String, Object>> uploadReceipt(@RequestParam("file") MultipartFile file)
+ {
         try {
             Path uploadPath = getUploadPath();
 
@@ -98,7 +99,7 @@ public class FileUploadController {
             response.put("fileType", contentType);
             response.put("size", String.valueOf(file.getSize()));
 
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(Map.<String, Object>of(MESSAGE_KEY, "Archivo eliminado correctamente"));
 
         } catch (IOException e) {
             return ResponseEntity.internalServerError().body(Map.of(ERROR_KEY, ERROR_RECEIPT_FAILED + e.getMessage()));
@@ -109,7 +110,8 @@ public class FileUploadController {
     // Delete file
     // =========================
     @DeleteMapping("/file")
-    public ResponseEntity<?> deleteFile(@RequestBody Map<String, String> request) {
+    public ResponseEntity<Map<String, Object>> deleteFile(@RequestBody Map<String, String> request)
+ {
         try {
             String fileName = request.get("fileName");
             if (fileName == null || fileName.isEmpty()) {
