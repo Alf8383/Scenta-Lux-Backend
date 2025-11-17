@@ -1,0 +1,13 @@
+# Ignorar carpeta de compilación de Maven
+target
+
+# Ignorar control de versiones
+.git
+.gitignore
+
+# Ignorar archivos de configuración y documentación innecesarios
+Dockerfile
+docker-compose.yml
+README.md
+*.log
+*.tmp

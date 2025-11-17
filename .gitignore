@@ -1,0 +1,50 @@
+# =========================
+# Archivos y carpetas comunes
+# =========================
+HELP.md
+target/
+logs/
+uploads/
+
+# Evitar incluir builds anidados
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# =========================
+# Archivos de IDEs y herramientas
+# =========================
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+# =========================
+# Configuraciones locales
+# =========================
+application-local.properties
+application-dev.properties
+*.log
