@@ -35,7 +35,7 @@ public class FileUploadController {
     private static final String ERROR_FILE_DELETE = "Error al eliminar el archivo: ";
 
     private static final String URL_PREFIX = "/uploads/";
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    private static final long MAX_FILE_SIZE = 5L * 1024 * 1024; // 5MB
 
     // =========================
     // Configuration
