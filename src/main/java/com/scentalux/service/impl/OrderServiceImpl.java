@@ -12,13 +12,14 @@ import com.scentalux.repo.IOrderRepo;
 import com.scentalux.repo.IUserRepo;
 import com.scentalux.repo.PerfumeRepository;
 import com.scentalux.service.OrderService;
+import com.scentalux.exception.OrderNotFoundException;
+import com.scentalux.exception.OrderValidationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -35,11 +36,11 @@ public class OrderServiceImpl extends ImplGenericService<Order, Integer> impleme
 
     @Transactional
     @Override
-    public OrderDTO createOrder(CreateOrderDTO orderDTO, String username) throws Exception {
-        // Buscar usuario - usando tu método actual que devuelve User en lugar de Optional
+    public OrderDTO createOrder(CreateOrderDTO orderDTO, String username) throws OrderValidationException {
+        // Buscar usuario
         User user = userRepo.findOneByUsername(username);
         if (user == null) {
-            throw new Exception("Usuario no encontrado: " + username);
+            throw new OrderValidationException("Usuario no encontrado: " + username);
         }
 
         // Crear pedido
@@ -51,8 +52,6 @@ public class OrderServiceImpl extends ImplGenericService<Order, Integer> impleme
         order.setCity(orderDTO.getCity());
         order.setPostalCode(orderDTO.getPostalCode());
         order.setPhone(orderDTO.getPhone());
-
-        // ✅ ESTABLECER ESTADO INICIAL COMO PENDIENTE
         order.setStatus("PENDIENTE");
 
         // Calcular totales
@@ -62,14 +61,14 @@ public class OrderServiceImpl extends ImplGenericService<Order, Integer> impleme
         for (OrderItemDTO itemDTO : orderDTO.getItems()) {
             Optional<Perfume> perfumeOpt = perfumeRepo.findById(itemDTO.getPerfumeId());
             if (perfumeOpt.isEmpty()) {
-                throw new Exception("Perfume no encontrado: " + itemDTO.getPerfumeId());
+                throw new OrderValidationException("Perfume no encontrado: " + itemDTO.getPerfumeId());
             }
             
             Perfume perfume = perfumeOpt.get();
 
             // Verificar stock
             if (perfume.getStock() < itemDTO.getQuantity()) {
-                throw new Exception("Stock insuficiente para: " + perfume.getName() + 
+                throw new OrderValidationException("Stock insuficiente para: " + perfume.getName() + 
                                   ". Stock disponible: " + perfume.getStock() + 
                                   ", solicitado: " + itemDTO.getQuantity());
             }
@@ -104,26 +103,35 @@ public class OrderServiceImpl extends ImplGenericService<Order, Integer> impleme
     }
 
     @Override
-    public List<OrderDTO> getUserOrders(String username) throws Exception {
+    public List<OrderDTO> getUserOrders(String username) throws OrderNotFoundException {
         List<Order> orders = orderRepo.findByUsernameOrderByOrderDateDesc(username);
+        if (orders.isEmpty()) {
+            throw new OrderNotFoundException("No se encontraron pedidos para el usuario: " + username);
+        }
         return orders.stream()
                 .map(this::convertToDTO)
-                .collect(Collectors.toList());
+                .toList(); // Replaced collect(Collectors.toList()) with toList()
     }
 
     @Override
-    public OrderDTO getOrderByNumber(String orderNumber) throws Exception {
+    public OrderDTO getOrderByNumber(String orderNumber) throws OrderNotFoundException {
         Optional<Order> orderOpt = orderRepo.findByOrderNumber(orderNumber);
         if (orderOpt.isEmpty()) {
-            throw new Exception("Pedido no encontrado: " + orderNumber);
+            throw new OrderNotFoundException("Pedido no encontrado: " + orderNumber);
         }
         return convertToDTO(orderOpt.get());
     }
 
     @Transactional
     @Override
-    public OrderDTO updateOrderStatus(Integer orderId, String status) throws Exception {
+    public OrderDTO updateOrderStatus(Integer orderId, String status) throws OrderValidationException {
+        if (orderId == null) {
+            throw new OrderValidationException("Order ID cannot be null");
+        }
         Order order = findById(orderId);
+        if (order == null) {
+            throw new OrderValidationException("Pedido no encontrado: " + orderId);
+        }
         order.setStatus(status);
         Order updatedOrder = orderRepo.save(order);
         return convertToDTO(updatedOrder);
@@ -131,10 +139,15 @@ public class OrderServiceImpl extends ImplGenericService<Order, Integer> impleme
 
     @Transactional
     @Override
-    public OrderDTO uploadReceipt(Integer orderId, String receiptImageUrl) throws Exception {
+    public OrderDTO uploadReceipt(Integer orderId, String receiptImageUrl) throws OrderValidationException {
+        if (orderId == null) {
+            throw new OrderValidationException("Order ID cannot be null");
+        }
         Order order = findById(orderId);
+        if (order == null) {
+            throw new OrderValidationException("Pedido no encontrado: " + orderId);
+        }
         order.setReceiptImageUrl(receiptImageUrl);
-       // order.setStatus("CONFIRMADO");
         Order updatedOrder = orderRepo.save(order);
         return convertToDTO(updatedOrder);
     }
@@ -168,7 +181,7 @@ public class OrderServiceImpl extends ImplGenericService<Order, Integer> impleme
                     itemDTO.setTotalPrice(item.getTotalPrice());
                     return itemDTO;
                 })
-                .collect(Collectors.toList());
+                .toList(); // Replaced collect(Collectors.toList()) with toList()
 
         dto.setItems(itemDTOs);
         return dto;
