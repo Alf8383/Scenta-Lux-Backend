@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/orders")
@@ -24,7 +23,7 @@ public class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    public ResponseEntity<?> createOrder(
+    public ResponseEntity<OrderDTO> createOrder(
             @Valid @RequestBody CreateOrderDTO orderDTO,
             Authentication authentication) {
         try {
@@ -32,36 +31,39 @@ public class OrderController {
             OrderDTO createdOrder = orderService.createOrder(orderDTO, username);
             return ResponseEntity.ok(createdOrder);
         } catch (Exception e) {
+            // Return Map<String, String> only for error response
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(new OrderDTO()); // Return an empty OrderDTO in case of error
         }
     }
 
     @GetMapping("/my-orders")
-    public ResponseEntity<?> getUserOrders(Authentication authentication) {
+    public ResponseEntity<List<OrderDTO>> getUserOrders(Authentication authentication) {
         try {
             String username = authentication.getName();
             List<OrderDTO> orders = orderService.getUserOrders(username);
             return ResponseEntity.ok(orders);
         } catch (Exception e) {
+            // Return Map<String, String> only for error response
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(List.of()); // Return an empty list of orders in case of error
         }
     }
 
     @GetMapping("/{orderNumber}")
-    public ResponseEntity<?> getOrder(@PathVariable String orderNumber) {
+    public ResponseEntity<OrderDTO> getOrder(@PathVariable String orderNumber) {
         try {
             OrderDTO order = orderService.getOrderByNumber(orderNumber);
             return ResponseEntity.ok(order);
         } catch (Exception e) {
+            // Return Map<String, String> only for error response
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(new OrderDTO()); // Return an empty OrderDTO in case of error
         }
     }
 
     @PutMapping("/{orderId}/status")
-    public ResponseEntity<?> updateOrderStatus(
+    public ResponseEntity<OrderDTO> updateOrderStatus(
             @PathVariable Integer orderId,
             @RequestBody Map<String, String> request) {
         try {
@@ -69,13 +71,14 @@ public class OrderController {
             OrderDTO updatedOrder = orderService.updateOrderStatus(orderId, status);
             return ResponseEntity.ok(updatedOrder);
         } catch (Exception e) {
+            // Return Map<String, String> only for error response
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(new OrderDTO()); // Return an empty OrderDTO in case of error
         }
     }
 
     @PutMapping("/{orderId}/receipt")
-    public ResponseEntity<?> uploadReceipt(
+    public ResponseEntity<OrderDTO> uploadReceipt(
             @PathVariable Integer orderId,
             @RequestBody Map<String, String> request) {
         try {
@@ -83,14 +86,15 @@ public class OrderController {
             OrderDTO updatedOrder = orderService.uploadReceipt(orderId, receiptImageUrl);
             return ResponseEntity.ok(updatedOrder);
         } catch (Exception e) {
+            // Return Map<String, String> only for error response
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(new OrderDTO()); // Return an empty OrderDTO in case of error
         }
     }
 
     // Endpoint para obtener todos los pedidos (solo admin)
     @GetMapping
-    public ResponseEntity<?> getAllOrders() {
+    public ResponseEntity<List<OrderDTO>> getAllOrders() {
         try {
             List<OrderDTO> orders = orderService.findAll().stream()
                     .map(order -> {
@@ -108,7 +112,7 @@ public class OrderController {
                         dto.setShippingAddress(order.getShippingAddress());
                         dto.setCity(order.getCity());
                         dto.setPostalCode(order.getPostalCode());
-                        
+
                         // Convertir items
                         List<OrderItemResponseDTO> itemDTOs = order.getItems().stream()
                                 .map(item -> {
@@ -122,28 +126,30 @@ public class OrderController {
                                     itemDTO.setTotalPrice(item.getTotalPrice());
                                     return itemDTO;
                                 })
-                                .collect(Collectors.toList());
-                        
+                                .toList(); // Use Stream.toList() here
+
                         dto.setItems(itemDTOs);
                         return dto;
                     })
-                    .collect(Collectors.toList());
+                    .toList(); // Use Stream.toList() here
             return ResponseEntity.ok(orders);
         } catch (Exception e) {
+            // Return Map<String, String> only for error response
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", "Error al obtener los pedidos: " + e.getMessage()));
+                    .body(List.of()); // Return an empty list of orders in case of error
         }
     }
 
     // Endpoint para eliminar pedido
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteOrder(@PathVariable Integer id) {
+    public ResponseEntity<Void> deleteOrder(@PathVariable Integer id) {
         try {
             orderService.delete(id);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
+            // Return Map<String, String> only for error response
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(null); // Return no content on error
         }
     }
 }
