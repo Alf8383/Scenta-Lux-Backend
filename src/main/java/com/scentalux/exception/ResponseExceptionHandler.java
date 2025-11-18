@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import org.springframework.lang.NonNull; // Import NonNull annotation
+
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
@@ -33,7 +34,6 @@ public class ResponseExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @Override
-    
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             @NonNull MethodArgumentNotValidException ex, 
             @NonNull HttpHeaders headers, 
@@ -48,7 +48,6 @@ public class ResponseExceptionHandler extends ResponseEntityExceptionHandler {
         // Creating a custom error record
         CustomErrorRecord err = new CustomErrorRecord(LocalDateTime.now(), msg, request.getDescription(false));
 
-        // Returning a ResponseEntity<Object> to comply with the superclass contract
         return new ResponseEntity<>(err, HttpStatus.BAD_REQUEST);
     }
 }
