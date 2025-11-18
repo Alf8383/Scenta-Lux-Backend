@@ -77,9 +77,12 @@ void login_ReturnsTokenAndUserData() throws Exception {
 
     // Assert
     assertNotNull(response);
-    assertEquals("fake-jwt-token", response.getBody().accessToken());
-    assertEquals("userTest", response.getBody().username());
-    assertEquals(List.of("ADMIN"), response.getBody().roles());
+    assertNotNull(response.getBody());
+    JwtResponse jwtResponse = response.getBody();
+    assertNotNull(jwtResponse, "JwtResponse should not be null");
+    assertEquals("fake-jwt-token", jwtResponse.accessToken());
+    assertEquals("userTest", jwtResponse.username());
+    assertEquals(List.of("ADMIN"), jwtResponse.roles());
 
     verify(authenticationManager).authenticate(any());
     verify(jwtUserDetailsService).loadUserByUsername("userTest");

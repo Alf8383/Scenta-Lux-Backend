@@ -9,6 +9,7 @@ import com.scentalux.service.RolService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import lombok.NonNull;
 
 @Service
 @RequiredArgsConstructor
@@ -20,7 +21,7 @@ public class implRol extends ImplGenericService<Role, Integer> implements RolSer
         return repo;
     }
     @Override
-    public Page<Role> listPage(Pageable pageable) {
+    public Page<Role> listPage(@NonNull Pageable pageable) {
         return repo.findAll(pageable);
     }
 

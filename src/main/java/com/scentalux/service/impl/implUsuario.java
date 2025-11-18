@@ -9,6 +9,7 @@ import com.scentalux.service.UsuarioService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import lombok.RequiredArgsConstructor;
+import lombok.NonNull;
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +22,7 @@ public class implUsuario extends ImplGenericService<User, Integer> implements Us
     }
     
     @Override
-    public Page<User> listPage(Pageable pageable) {
+    public Page<User> listPage(@NonNull Pageable pageable) {
         return repo.findAll(pageable);
     }
     

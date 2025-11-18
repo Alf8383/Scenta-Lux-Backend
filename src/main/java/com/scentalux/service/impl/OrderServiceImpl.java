@@ -59,9 +59,13 @@ public class OrderServiceImpl extends ImplGenericService<Order, Integer> impleme
 
         // Procesar items
         for (OrderItemDTO itemDTO : orderDTO.getItems()) {
-            Optional<Perfume> perfumeOpt = perfumeRepo.findById(itemDTO.getPerfumeId());
+            Integer perfumeId = itemDTO.getPerfumeId();
+            if (perfumeId == null) {
+                throw new OrderValidationException("El ID del perfume no puede ser nulo.");
+            }
+            Optional<Perfume> perfumeOpt = perfumeRepo.findById(perfumeId);
             if (perfumeOpt.isEmpty()) {
-                throw new OrderValidationException("Perfume no encontrado: " + itemDTO.getPerfumeId());
+                throw new OrderValidationException("Perfume no encontrado: " + perfumeId);
             }
             
             Perfume perfume = perfumeOpt.get();

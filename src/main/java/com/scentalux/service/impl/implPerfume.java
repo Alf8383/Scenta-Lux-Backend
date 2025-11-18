@@ -22,6 +22,9 @@ public class implPerfume extends ImplGenericService<Perfume, Integer> implements
 
     @Override
     public Page<Perfume> listPage(Pageable pageable) {
+        if (pageable == null) {
+            throw new IllegalArgumentException("Pageable parameter must not be null");
+        }
         return repo.findAll(pageable);
     }
 }

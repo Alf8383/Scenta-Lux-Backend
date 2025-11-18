@@ -6,6 +6,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -31,7 +32,7 @@ public class MapperUtil {
         if(mapperQualifier.length == 0 || mapperQualifier[0] == null || mapperQualifier[0].isEmpty())  {
             return applicationContext.getBean("defaultMapper", ModelMapper.class);
         }else{
-            return applicationContext.getBean(mapperQualifier[0], ModelMapper.class);
+            return applicationContext.getBean(Objects.requireNonNull(mapperQualifier[0], "Mapper qualifier cannot be null"), ModelMapper.class);
         }
     }
 }
