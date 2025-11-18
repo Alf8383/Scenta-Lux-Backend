@@ -17,7 +17,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
 
 //Clase S7
 @Configuration
@@ -51,17 +50,17 @@ public class WebSecurityConfig {
         http
                 //.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(req -> req
-                        .requestMatchers(antMatcher("/login")).permitAll()
-                        .requestMatchers(antMatcher("/roles/**")).permitAll()
-                        .requestMatchers(antMatcher("/usuarios/**")).permitAll()
-                        .requestMatchers(antMatcher("/mail/**")).permitAll()
-                        .requestMatchers(antMatcher("/perfumes/**")).permitAll()
-                        .requestMatchers(antMatcher("/api/upload/**")).permitAll()  // ✅ PERMITE SUBIR ARCHIVOS
-                        .requestMatchers(antMatcher("/uploads/**")).permitAll()      // ✅ PERMITE ACCEDER A IMÁGENES
+                        .requestMatchers(("/login")).permitAll()
+                        .requestMatchers(("/roles/**")).permitAll()
+                        .requestMatchers(("/usuarios/**")).permitAll()
+                        .requestMatchers(("/mail/**")).permitAll()
+                        .requestMatchers(("/perfumes/**")).permitAll()
+                        .requestMatchers(("/api/upload/**")).permitAll()  // ✅ PERMITE SUBIR ARCHIVOS
+                        .requestMatchers(("/uploads/**")).permitAll()      // ✅ PERMITE ACCEDER A IMÁGENES
                         // 🔥 NUEVAS RUTAS PARA ORDERS
-                        .requestMatchers(antMatcher("/orders/my-orders")).authenticated()
-                        .requestMatchers(antMatcher("/orders")).authenticated()
-                        .requestMatchers(antMatcher("/orders/**")).authenticated()
+                        .requestMatchers(("/orders/my-orders")).authenticated()
+                        .requestMatchers(("/orders")).authenticated()
+                        .requestMatchers(("/orders/**")).authenticated()
                         .anyRequest().authenticated()   
                 )
                 .formLogin(AbstractHttpConfigurer::disable)
