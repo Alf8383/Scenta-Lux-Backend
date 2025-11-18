@@ -1,6 +1,8 @@
 package com.scentalux.util;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -19,10 +21,15 @@ import org.springframework.stereotype.Component;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class CORS implements Filter {
 
+    // List of trusted domains
+    private static final List<String> TRUSTED_ORIGINS = Arrays.asList(
+        "https://trustedsite1.com",
+        "https://trustedsite2.com"
+    );
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
-        // complete later
-
+        // You can initialize configurations here if needed
     }
 
     @Override
@@ -31,11 +38,24 @@ public class CORS implements Filter {
         HttpServletResponse response = (HttpServletResponse) res;
         HttpServletRequest request = (HttpServletRequest) req;
 
-        response.setHeader("Access-Control-Allow-Origin", "*");
+        // Get the 'Origin' header from the request
+        String origin = request.getHeader("Origin");
+
+        // If the origin is in the trusted list, set it in the response
+        if (origin != null && TRUSTED_ORIGINS.contains(origin)) {
+            response.setHeader("Access-Control-Allow-Origin", origin);
+        }
+
+        // Allow specific methods
         response.setHeader("Access-Control-Allow-Methods", "DELETE, GET, OPTIONS, PATCH, POST, PUT");
+
+        // Set max age to cache pre-flight requests
         response.setHeader("Access-Control-Max-Age", "3600");
+
+        // Set allowed headers
         response.setHeader("Access-Control-Allow-Headers", "x-requested-with, authorization, Content-Type, Authorization, credential, X-XSRF-TOKEN");
 
+        // Handle pre-flight OPTIONS request
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             response.setStatus(HttpServletResponse.SC_OK);
         } else {
@@ -45,6 +65,6 @@ public class CORS implements Filter {
 
     @Override
     public void destroy() {
-        // complete later
+        // Cleanup resources if needed
     }
 }
