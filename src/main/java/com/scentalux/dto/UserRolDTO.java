@@ -1,7 +1,5 @@
 package com.scentalux.dto;
 
-import com.scentalux.model.Role;
-import com.scentalux.model.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

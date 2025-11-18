@@ -3,7 +3,6 @@ package com.scentalux.controller;
 import com.scentalux.dto.CreateOrderDTO;
 import com.scentalux.dto.OrderDTO;
 import com.scentalux.dto.OrderItemResponseDTO;
-import com.scentalux.model.Order;
 import com.scentalux.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

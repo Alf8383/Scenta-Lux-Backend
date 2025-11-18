@@ -2,10 +2,8 @@ package com.scentalux.util;
 
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
-import org.springframework.ui.ModelMap;
 
 import java.util.List;
 
