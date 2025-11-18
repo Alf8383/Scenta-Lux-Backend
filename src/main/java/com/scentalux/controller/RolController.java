@@ -3,6 +3,7 @@ package com.scentalux.controller;
 import com.scentalux.dto.RolDTO;
 import com.scentalux.model.Role;
 import com.scentalux.service.RolService;
+import com.scentalux.exception.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -27,7 +28,7 @@ public class RolController {
 
     // Obtener todos los roles
     @GetMapping
-    public ResponseEntity<List<RolDTO>> findAll() throws Exception {
+    public ResponseEntity<List<RolDTO>> findAll() {
         List<RolDTO> list = service.findAll()
                 .stream()
                 .map(this::convertToDto)
@@ -37,14 +38,17 @@ public class RolController {
 
     // Obtener un rol por su ID
     @GetMapping("/{id}")
-    public ResponseEntity<RolDTO> findById(@PathVariable("id") Integer id) throws Exception {
-        RolDTO dto = convertToDto(service.findById(id));
-        return ResponseEntity.ok(dto);
+    public ResponseEntity<RolDTO> findById(@PathVariable("id") Integer id) {
+        Role role = service.findById(id);
+        if (role == null) {
+            throw new ResourceNotFoundException("Role not found with id: " + id);  // Custom exception
+        }
+        return ResponseEntity.ok(convertToDto(role));
     }
 
     // Crear un nuevo rol
     @PostMapping
-    public ResponseEntity<Void> save(@Valid @RequestBody RolDTO dto) throws Exception {
+    public ResponseEntity<Void> save(@Valid @RequestBody RolDTO dto) {
         Role obj = service.save(convertToEntity(dto));
         URI location = ServletUriComponentsBuilder
                 .fromCurrentRequest()
@@ -56,16 +60,19 @@ public class RolController {
 
     // Actualizar un rol existente
     @PutMapping("/{id}")
-    public ResponseEntity<RolDTO> update(@PathVariable("id") Integer id, @Valid @RequestBody RolDTO dto) throws Exception {
+    public ResponseEntity<RolDTO> update(@PathVariable("id") Integer id, @Valid @RequestBody RolDTO dto) {
         Role updated = service.update(convertToEntity(dto), id);
+        if (updated == null) {
+            throw new ResourceNotFoundException("Role not found with id: " + id);  // Custom exception
+        }
         return ResponseEntity.ok(convertToDto(updated));
     }
 
     // Eliminar un rol
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable("id") Integer id) throws Exception {
-        service.delete(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> delete(@PathVariable("id") Integer id) {
+        service.delete(id);  // No need to capture return value if it's void
+        return ResponseEntity.noContent().build();  // Return 204 No Content
     }
 
     // Paginación de roles
