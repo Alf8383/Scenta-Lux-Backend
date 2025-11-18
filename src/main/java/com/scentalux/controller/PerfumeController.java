@@ -12,86 +12,87 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/perfumes")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:3000")
 public class PerfumeController {
 
     private final PerfumeService perfumeService;
+    
+    // Define a constant for the error key
+    private static final String ERROR_KEY = "error"; 
 
     // ✅ Listar todos los perfumes
     @GetMapping
-public ResponseEntity<?> listar() {
-    try {
-        List<Perfume> perfumes = perfumeService.findAll();
-        List<PerfumeDTO> perfumesDTO = perfumes.stream()
-                .map(PerfumeMapper::toDTO)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(perfumesDTO);
-    } catch (Exception e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Error al listar perfumes: " + e.getMessage()));
+    public ResponseEntity<List<PerfumeDTO>> listar() {
+        try {
+            List<Perfume> perfumes = perfumeService.findAll();
+            List<PerfumeDTO> perfumesDTO = perfumes.stream()
+                    .map(PerfumeMapper::toDTO)
+                    .toList();
+            return ResponseEntity.ok(perfumesDTO);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
     }
-}
-
 
     // ✅ Obtener perfume por ID
     @GetMapping("/{id}")
-    public ResponseEntity<?> obtenerPorId(@PathVariable Integer id) {
+    public ResponseEntity<Map<String, Object>> obtenerPorId(@PathVariable Integer id) {
         try {
             Perfume perfume = perfumeService.findById(id);
-            return ResponseEntity.ok(PerfumeMapper.toDTO(perfume));
+            return ResponseEntity.ok(Map.of("perfume", PerfumeMapper.toDTO(perfume)));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));  // Use constant here
         }
     }
 
     // ✅ Registrar nuevo perfume (desde frontend)
     @PostMapping
-    public ResponseEntity<?> registrar(@Valid @RequestBody PerfumeDTO dto) {
+    public ResponseEntity<Object> registrar(@Valid @RequestBody PerfumeDTO dto) {
         try {
             Perfume perfume = PerfumeMapper.toEntity(dto);
             Perfume creado = perfumeService.save(perfume);
             return new ResponseEntity<>(PerfumeMapper.toDTO(creado), HttpStatus.CREATED);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));  // Use constant here
         }
     }
 
     // ✅ Actualizar perfume existente
     @PutMapping("/{id}")
-    public ResponseEntity<?> modificar(@PathVariable Integer id, @Valid @RequestBody PerfumeDTO dto) {
+    public ResponseEntity<Map<String, Object>> modificar(@PathVariable Integer id, @Valid @RequestBody PerfumeDTO dto) {
         try {
             Perfume existente = perfumeService.findById(id);
             Perfume actualizado = PerfumeMapper.updateEntityFromDTO(dto, existente);
             Perfume guardado = perfumeService.update(actualizado, id);
-            return ResponseEntity.ok(PerfumeMapper.toDTO(guardado));
+            return ResponseEntity.ok(Map.of("perfume", PerfumeMapper.toDTO(guardado)));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));  // Use constant here
         }
     }
 
     // ✅ Eliminar perfume
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> eliminar(@PathVariable Integer id) {
+    public ResponseEntity<Map<String, Object>> eliminar(@PathVariable Integer id) {
         try {
             perfumeService.delete(id);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));  // Use constant here
         }
     }
 
     // ✅ Cambiar estado publicado
     @PutMapping("/{id}/publish")
-    public ResponseEntity<?> togglePublish(@PathVariable Integer id) {
+    public ResponseEntity<Object> togglePublish(@PathVariable Integer id) {
         try {
             Perfume perfume = perfumeService.findById(id);
             perfume.setPublished(!perfume.isPublished());
@@ -99,26 +100,26 @@ public ResponseEntity<?> listar() {
             return ResponseEntity.ok(PerfumeMapper.toDTO(updated));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));  // Use constant here
         }
     }
 
     // ✅ Actualizar stock después de compra
     @PutMapping("/{id}/stock")
-    public ResponseEntity<?> updateStock(@PathVariable Integer id, @RequestBody Map<String, Integer> body) {
+    public ResponseEntity<Object> updateStock(@PathVariable Integer id, @RequestBody Map<String, Integer> body) {
         try {
             int quantitySold = body.getOrDefault("quantitySold", 0);
             Perfume perfume = perfumeService.findById(id);
             if (quantitySold > perfume.getStock()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Stock insuficiente"));
+                        .body(Map.of(ERROR_KEY, "Stock insuficiente"));  // Use constant here
             }
             perfume.setStock(perfume.getStock() - quantitySold);
             Perfume updated = perfumeService.update(perfume, id);
             return ResponseEntity.ok(PerfumeMapper.toDTO(updated));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", e.getMessage()));
+                    .body(Map.of(ERROR_KEY, e.getMessage()));  // Use constant here
         }
     }
 }
