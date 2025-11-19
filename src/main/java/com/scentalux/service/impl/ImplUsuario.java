@@ -13,7 +13,7 @@ import lombok.NonNull;
 
 @Service
 @RequiredArgsConstructor
-public class implUsuario extends ImplGenericService<User, Integer> implements UsuarioService {
+public class ImplUsuario extends ImplGenericService<User, Integer> implements UsuarioService {
         private final IUserRepo repo;
 
     @Override

@@ -13,7 +13,7 @@ import lombok.NonNull;
 
 @Service
 @RequiredArgsConstructor
-public class implRol extends ImplGenericService<Role, Integer> implements RolService {
+public class ImplRol extends ImplGenericService<Role, Integer> implements RolService {
     private final RolRepository repo;
 
     @Override
